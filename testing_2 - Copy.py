@@ -1,21 +1,25 @@
 import requests
 import json
+from datetime import datetime
 
-# 🔹 Your Power Automate Webhook URL
+# 🔗 Your Power Automate Flow URL
 POWER_AUTOMATE_URL = "https://default37d6c2dc481348e3a84228cab8171c.98.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/112a4ff1062f4ed48bc7903b03e654a8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=cxN7IomRTtqXOhtaZqL2PYdd0jRGqMaVXGA4q1BcGEE"
 
+
 def send_to_online_excel(data: dict):
+    """Send a JSON payload to Power Automate"""
     headers = {"Content-Type": "application/json"}
-    response = requests.post(POWER_AUTOMATE_URL, headers=headers, json=data)
-    if response.status_code in [200, 202]:
+    response = requests.post(POWER_AUTOMATE_URL, headers=headers, data=json.dumps(data))
+    if response.status_code in (200, 202):
         st.success("✅ Feedback sent to Online Excel successfully!")
     else:
-        st.error(f"⚠️ Failed to send data: {response.status_code} — {response.text}")
+        st.error(f"⚠️ Failed to send data: {response.status_code}\n{response.text}")
+
 
 # -------------------------
 # When form is submitted
 # -------------------------
-if submitted:
+if 'submitted' in locals() and submitted:
     if not review.strip():
         st.warning("Please enter a review before submitting.")
     else:
@@ -23,7 +27,7 @@ if submitted:
         with st.spinner("Analyzing sentiment..."):
             sentiment = predict_sentiment(review)
 
-        # 2️⃣ Prepare a plain dict (not DataFrame)
+        # 2️⃣ Prepare row as a plain dict (✅ JSON-serializable)
         new_row = {
             "CustomerID": CustomerID,
             "Name": name,
@@ -60,7 +64,8 @@ if submitted:
             "Sentiment": sentiment,
         }
 
-        # 3️⃣ Send plain JSON to Power Automate
+        # 3️⃣ Send JSON payload to Power Automate
         send_to_online_excel(new_row)
 
+        # 4️⃣ Show user confirmation
         st.success(f"✅ Thank you for your feedback! Sentiment detected: **{sentiment}**")
